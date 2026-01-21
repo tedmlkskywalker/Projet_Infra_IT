@@ -1,15 +1,15 @@
-from flask import Flask, render_template_string, render_template, jsonify, request, redirect, url_for, session
-from flask import json
-from urllib.request import urlopen
-from werkzeug.utils import secure_filename
-import sqlite3
-
-# Séquence 5 - Exercice 2 (Protection user/12345)
-from functools import wraps
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from flask import Response
+from functools import wraps
+import sqlite3
+import os
 
 app = Flask(__name__)
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+# ✅ IMPORTANT : chemin absolu vers database.db (évite les bugs Alwaysdata)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 
 # ----------------------------
@@ -20,7 +20,7 @@ def est_authentifie():
 
 
 # ----------------------------
-# Authentification USER (Basic Auth) - Séquence 5
+# Authentification USER (Basic Auth) - user/12345
 # ----------------------------
 def require_user_auth(f):
     @wraps(f)
@@ -37,7 +37,7 @@ def require_user_auth(f):
 
 
 # ----------------------------
-# Routes existantes (Séquence 4/5)
+# Routes existantes (base)
 # ----------------------------
 @app.route('/')
 def hello_world():
@@ -63,84 +63,33 @@ def authentification():
     return render_template('formulaire_authentification.html', error=False)
 
 
-# ⚠️ Ces routes CLIENTS ne fonctionneront plus si tu as remplacé schema.sql par la version bibliothèque.
-@app.route('/fiche_client/<int:post_id>')
-def Readfiche(post_id):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
-    data = cursor.fetchall()
-    conn.close()
-    return render_template('read_data.html', data=data)
+# ---------------------------------------------------
+# Séquence 6 - Bibliothèque (HTML + routes API)
+# ---------------------------------------------------
+
+# ✅ Page admin HTML (ajout/suppression)
+@app.route('/admin/books', methods=['GET'])
+def admin_books():
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    return render_template('books_admin.html')
 
 
-@app.route('/fiche_nom/', methods=['GET'])
-@require_user_auth
-def fiche_nom():
-    nom = request.args.get('nom')
-
-    if not nom:
-        return "Paramètre 'nom' manquant. Exemple : /fiche_nom/?nom=DUPONT", 400
-
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE nom LIKE ?', (f"%{nom}%",))
-    data = cursor.fetchall()
-    conn.close()
-
-    return render_template('read_data.html', data=data)
-
-
-@app.route('/consultation/')
-def ReadBDD():
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients;')
-    data = cursor.fetchall()
-    conn.close()
-    return render_template('read_data.html', data=data)
-
-
-@app.route('/enregistrer_client', methods=['GET'])
-def formulaire_client():
-    return render_template('formulaire.html')
-
-
-@app.route('/enregistrer_client', methods=['POST'])
-def enregistrer_client():
-    nom = request.form['nom']
-    prenom = request.form['prenom']
-
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO clients (created, nom, prenom, adresse) VALUES (?, ?, ?, ?)',
-        (1002938, nom, prenom, "ICI")
-    )
-    conn.commit()
-    conn.close()
-    return redirect('/consultation/')
-
-
-# ----------------------------
-# Séquence 6 - Bibliothèque
-# ----------------------------
-
-# 1) Liste de tous les livres
+# ✅ Liste HTML des livres
 @app.route('/books', methods=['GET'])
 def books():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT id, title, author, stock FROM books')
-    data = cursor.fetchall()
+    books = cursor.fetchall()
     conn.close()
-    return jsonify(data)
+    return render_template('books_list.html', books=books)
 
 
-# 2) Livres disponibles (stock > 0)
+# ✅ Livres disponibles (JSON)
 @app.route('/books/available', methods=['GET'])
 def books_available():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT id, title, author, stock FROM books WHERE stock > 0')
     data = cursor.fetchall()
@@ -148,7 +97,7 @@ def books_available():
     return jsonify(data)
 
 
-# 3) Ajouter un livre (ADMIN)
+# ✅ Ajouter un livre (ADMIN) — utilisé par books_admin.html
 @app.route('/books/add', methods=['POST'])
 def add_book():
     if not est_authentifie():
@@ -161,7 +110,7 @@ def add_book():
     if not title or not author:
         return "Champs manquants: title et author", 400
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         'INSERT INTO books (title, author, stock) VALUES (?, ?, ?)',
@@ -169,28 +118,34 @@ def add_book():
     )
     conn.commit()
     conn.close()
-    return "Livre ajouté"
+
+    return redirect('/admin/books')
 
 
-# 4) Supprimer un livre (ADMIN)
-@app.route('/books/delete/<int:book_id>', methods=['POST'])
-def delete_book(book_id):
+# ✅ Supprimer un livre (ADMIN) — utilisé par books_admin.html
+@app.route('/books/delete', methods=['POST'])
+def delete_book():
     if not est_authentifie():
         return redirect(url_for('authentification'))
 
-    conn = sqlite3.connect('database.db')
+    book_id = request.form.get('book_id')
+    if not book_id:
+        return "book_id manquant", 400
+
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('DELETE FROM books WHERE id = ?', (book_id,))
     conn.commit()
     conn.close()
-    return "Livre supprimé"
+
+    return redirect('/admin/books')
 
 
-# 5) Emprunter un livre (USER user/12345)
+# ✅ Emprunter un livre (USER) — API POST
 @app.route('/loan/<int:book_id>', methods=['POST'])
 @require_user_auth
 def loan_book(book_id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute('SELECT stock FROM books WHERE id = ?', (book_id,))
@@ -213,11 +168,11 @@ def loan_book(book_id):
     return "Livre emprunté"
 
 
-# 6) Retourner un livre (USER user/12345)
+# ✅ Retourner un livre (USER) — API POST
 @app.route('/return/<int:book_id>', methods=['POST'])
 @require_user_auth
 def return_book(book_id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -231,27 +186,19 @@ def return_book(book_id):
     conn.close()
     return "Livre retourné"
 
-@app.route('/books/add_form', methods=['GET'])
-def add_book_form():
-    # admin obligatoire
-    if not est_authentifie():
-        return redirect(url_for('authentification'))
 
-    return """
-    <h2>Ajouter un livre</h2>
-    <form method="POST" action="/books/add">
-      <label>Titre:</label><br>
-      <input name="title" required><br><br>
+# ✅ Routes de test GET (pour cliquer depuis books_list.html)
+@app.route('/loan_test/<int:book_id>', methods=['GET'])
+@require_user_auth
+def loan_test(book_id):
+    return loan_book(book_id)
 
-      <label>Auteur:</label><br>
-      <input name="author" required><br><br>
 
-      <label>Stock:</label><br>
-      <input name="stock" type="number" value="1" min="0"><br><br>
+@app.route('/return_test/<int:book_id>', methods=['GET'])
+@require_user_auth
+def return_test(book_id):
+    return return_book(book_id)
 
-      <button type="submit">Ajouter</button>
-    </form>
-    """
 
 if __name__ == "__main__":
     app.run(debug=True)
