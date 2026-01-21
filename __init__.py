@@ -5,12 +5,30 @@ from urllib.request import urlopen
 from werkzeug.utils import secure_filename
 import sqlite3
 
+# ✅ AJOUT (Séquence 5 - Exercice 2)
+from functools import wraps
+from flask import Response
+
 app = Flask(__name__)                                                                                                                  
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
 
 # Fonction pour créer une clé "authentifie" dans la session utilisateur
 def est_authentifie():
     return session.get('authentifie')
+
+# ✅ AJOUT (Séquence 5 - Exercice 2) : Protection user/12345
+def require_user_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not (auth.username == "user" and auth.password == "12345"):
+            return Response(
+                "Accès refusé (user requis)",
+                401,
+                {"WWW-Authenticate": 'Basic realm="User Area"'}
+            )
+        return f(*args, **kwargs)
+    return decorated
 
 @app.route('/')
 def hello_world():
@@ -47,6 +65,25 @@ def Readfiche(post_id):
     data = cursor.fetchall()
     conn.close()
     # Rendre le template HTML et transmettre les données
+    return render_template('read_data.html', data=data)
+
+# ✅ AJOUT (Séquence 5 - Exercice 1 + 2)
+# Route : /fiche_nom/?nom=DUPONT
+# Protégée par user/12345
+@app.route('/fiche_nom/', methods=['GET'])
+@require_user_auth
+def fiche_nom():
+    nom = request.args.get('nom')
+
+    if not nom:
+        return "Paramètre 'nom' manquant. Exemple : /fiche_nom/?nom=DUPONT", 400
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM clients WHERE nom LIKE ?', (f"%{nom}%",))
+    data = cursor.fetchall()
+    conn.close()
+
     return render_template('read_data.html', data=data)
 
 @app.route('/consultation/')
