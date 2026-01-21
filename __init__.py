@@ -231,6 +231,27 @@ def return_book(book_id):
     conn.close()
     return "Livre retourné"
 
+@app.route('/books/add_form', methods=['GET'])
+def add_book_form():
+    # admin obligatoire
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+
+    return """
+    <h2>Ajouter un livre</h2>
+    <form method="POST" action="/books/add">
+      <label>Titre:</label><br>
+      <input name="title" required><br><br>
+
+      <label>Auteur:</label><br>
+      <input name="author" required><br><br>
+
+      <label>Stock:</label><br>
+      <input name="stock" type="number" value="1" min="0"><br><br>
+
+      <button type="submit">Ajouter</button>
+    </form>
+    """
 
 if __name__ == "__main__":
     app.run(debug=True)
