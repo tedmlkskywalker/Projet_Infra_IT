@@ -1,20 +1,26 @@
 import sqlite3
 
-connection = sqlite3.connect('database.db')
+connection = sqlite3.connect("database.db")
 
-with open('schema.sql') as f:
+# Crée les tables définies dans schema.sql (bibliothèque)
+with open("schema.sql") as f:
     connection.executescript(f.read())
 
 cur = connection.cursor()
 
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('DUPONT', 'Emilie', '123, Rue des Lilas, 75001 Paris'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('LEROUX', 'Lucas', '456, Avenue du Soleil, 31000 Toulouse'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('MARTIN', 'Amandine', '789, Rue des Érables, 69002 Lyon'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('TREMBLAY', 'Antoine', '1010, Boulevard de la Mer, 13008 Marseille'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('LAMBERT', 'Sarah', '222, Avenue de la Liberté, 59000 Lille'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('GAGNON', 'Nicolas', '456, Boulevard des Cerisiers, 69003 Lyon'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('DUBOIS', 'Charlotte', '789, Rue des Roses, 13005 Marseille'))
-cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('LEFEVRE', 'Thomas', '333, Rue de la Paix, 75002 Paris'))
+# ----------------------------
+# USERS (gestion utilisateurs)
+# ----------------------------
+cur.execute("INSERT INTO users (username, role) VALUES (?, ?)", ("admin", "admin"))
+cur.execute("INSERT INTO users (username, role) VALUES (?, ?)", ("user", "user"))
+
+# ----------------------------
+# BOOKS (livres + stock)
+# ----------------------------
+cur.execute("INSERT INTO books (title, author, stock) VALUES (?, ?, ?)", ("Harry Potter", "J.K. Rowling", 3))
+cur.execute("INSERT INTO books (title, author, stock) VALUES (?, ?, ?)", ("Le Seigneur des Anneaux", "J.R.R. Tolkien", 2))
+cur.execute("INSERT INTO books (title, author, stock) VALUES (?, ?, ?)", ("1984", "George Orwell", 1))
+cur.execute("INSERT INTO books (title, author, stock) VALUES (?, ?, ?)", ("Dune", "Frank Herbert", 4))
 
 connection.commit()
 connection.close()
