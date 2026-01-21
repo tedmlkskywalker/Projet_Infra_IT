@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Bibliothèque</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        form { margin-bottom: 30px; }
+        input, button { padding: 8px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<h1>Administration – Bibliothèque</h1>
+
+<h2>➕ Ajouter un livre</h2>
+<form method="POST" action="/books/add">
+    <input name="title" placeholder="Titre" required><br>
+    <input name="author" placeholder="Auteur" required><br>
+    <input name="stock" type="number" placeholder="Stock" min="0" required><br>
+    <button type="submit">Ajouter</button>
+</form>
+
+<h2>➖ Supprimer un livre</h2>
+<form method="POST" action="/books/delete">
+    <input name="book_id" type="number" placeholder="ID du livre" required><br>
+    <button type="submit">Supprimer</button>
+</form>
+
+<a href="/books">Voir les livres</a>
+
+</body>
+</html>
