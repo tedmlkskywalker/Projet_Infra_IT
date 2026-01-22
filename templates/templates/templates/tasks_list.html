@@ -1,0 +1,19 @@
+<h1>Liste des tâches</h1>
+
+<a href="/tasks/add">➕ Nouvelle tâche</a>
+<hr>
+
+{% for task in tasks %}
+  <p>
+    <strong>{{ task["title"] }}</strong><br>
+    {{ task["description"] }}<br>
+    Échéance : {{ task["due_date"] }}<br>
+    Statut : {{ "Terminée" if task["done"] else "En cours" }}
+  </p>
+
+  <a href="/tasks/toggle/{{ task['id'] }}">Changer statut</a> |
+  <a href="/tasks/delete/{{ task['id'] }}">Supprimer</a>
+  <hr>
+{% endfor %}
+
+<a href="/">Accueil</a>
