@@ -1,19 +1,28 @@
-<h1>Liste des tâches</h1>
-
-<a href="/tasks/add">➕ Nouvelle tâche</a>
-<hr>
-
 {% for task in tasks %}
-  <p>
-    <strong>{{ task["title"] }}</strong><br>
-    {{ task["description"] }}<br>
-    Échéance : {{ task["due_date"] }}<br>
-    Statut : {{ "Terminée" if task["done"] else "En cours" }}
-  </p>
+  <div>
+    <h3>
+      {{ "✅" if task["done"] else "⏳" }}
+      {{ task["title"] }}
+    </h3>
 
-  <a href="/tasks/toggle/{{ task['id'] }}">Changer statut</a> |
-  <a href="/tasks/delete/{{ task['id'] }}">Supprimer</a>
+    <p>{{ task["description"] }}</p>
+    <p><strong>Échéance :</strong> {{ task["due_date"] }}</p>
+
+    <!-- BOUTON CHANGER STATUT -->
+    <form method="post" action="/tasks/toggle" style="display:inline;">
+      <input type="hidden" name="task_id" value="{{ task['id'] }}">
+      <button type="submit">
+        {{ "Marquer en cours" if task["done"] else "Marquer terminée" }}
+      </button>
+    </form>
+
+    <!-- BOUTON SUPPRIMER -->
+    <form method="post" action="/tasks/delete" style="display:inline;">
+      <input type="hidden" name="task_id" value="{{ task['id'] }}">
+      <button type="submit" onclick="return confirm('Supprimer cette tâche ?')">
+        🗑 Supprimer
+      </button>
+    </form>
+  </div>
   <hr>
 {% endfor %}
-
-<a href="/">Accueil</a>
