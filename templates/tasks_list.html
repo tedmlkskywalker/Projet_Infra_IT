@@ -1,28 +1,51 @@
-{% for task in tasks %}
-  <div>
-    <h3>
-      {{ "✅" if task["done"] else "⏳" }}
-      {{ task["title"] }}
-    </h3>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des tâches</title>
+</head>
+<body>
+  <h1>📋 Liste des tâches</h1>
 
-    <p>{{ task["description"] }}</p>
-    <p><strong>Échéance :</strong> {{ task["due_date"] }}</p>
+  <p>
+    <a href="/">🏠 Retour à l’accueil</a> |
+    <a href="/tasks/add">➕ Ajouter une tâche</a>
+  </p>
 
-    <!-- BOUTON CHANGER STATUT -->
-    <form method="post" action="/tasks/toggle" style="display:inline;">
-      <input type="hidden" name="task_id" value="{{ task['id'] }}">
-      <button type="submit">
-        {{ "Marquer en cours" if task["done"] else "Marquer terminée" }}
-      </button>
-    </form>
-
-    <!-- BOUTON SUPPRIMER -->
-    <form method="post" action="/tasks/delete" style="display:inline;">
-      <input type="hidden" name="task_id" value="{{ task['id'] }}">
-      <button type="submit" onclick="return confirm('Supprimer cette tâche ?')">
-        🗑 Supprimer
-      </button>
-    </form>
-  </div>
   <hr>
-{% endfor %}
+
+  {% if tasks|length == 0 %}
+    <p><strong>⏳ En attente de tâches…</strong></p>
+    <p>Tu peux commencer en cliquant ici : <a href="/tasks/add">Ajouter une tâche</a></p>
+  {% else %}
+    {% for task in tasks %}
+      <div>
+        <h3>
+          {{ "✅" if task["done"] else "⏳" }}
+          {{ task["title"] }}
+        </h3>
+
+        <p>{{ task["description"] }}</p>
+        <p><strong>Échéance :</strong> {{ task["due_date"] }}</p>
+
+        <!-- Changer statut -->
+        <form method="post" action="/tasks/toggle" style="display:inline;">
+          <input type="hidden" name="task_id" value="{{ task['id'] }}">
+          <button type="submit">
+            {{ "Marquer en cours" if task["done"] else "Marquer terminée" }}
+          </button>
+        </form>
+
+        <!-- Supprimer -->
+        <form method="post" action="/tasks/delete" style="display:inline;">
+          <input type="hidden" name="task_id" value="{{ task['id'] }}">
+          <button type="submit" onclick="return confirm('Supprimer cette tâche ?')">
+            🗑 Supprimer
+          </button>
+        </form>
+      </div>
+      <hr>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>
