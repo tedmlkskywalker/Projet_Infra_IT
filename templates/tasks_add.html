@@ -1,10 +1,40 @@
-<h1>Ajouter une tâche</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ajouter une tâche</title>
+</head>
+<body>
+  <h1>➕ Ajouter une tâche</h1>
 
-<form method="post">
-  <input type="text" name="title" placeholder="Titre" required><br><br>
-  <textarea name="description" placeholder="Description" required></textarea><br><br>
-  <input type="date" name="due_date" required><br><br>
-  <button type="submit">Ajouter</button>
-</form>
+  <p>
+    <a href="/">🏠 Retour à l’accueil</a> |
+    <a href="/tasks">📋 Voir la liste des tâches</a>
+  </p>
 
-<a href="/tasks">Retour à la liste</a>
+  <hr>
+
+  {% if error %}
+    <p style="color:red;"><strong>{{ error }}</strong></p>
+  {% endif %}
+
+  <form method="post" action="/tasks/add">
+    <p>
+      <label>Titre</label><br>
+      <input type="text" name="title" required>
+    </p>
+
+    <p>
+      <label>Description</label><br>
+      <textarea name="description" required></textarea>
+    </p>
+
+    <p>
+      <label>Date d’échéance</label><br>
+      <input type="date" name="due_date" required>
+    </p>
+
+    <button type="submit">✅ Ajouter</button>
+  </form>
+</body>
+</html>
