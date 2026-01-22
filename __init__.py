@@ -268,6 +268,11 @@ def delete_task():
 
     return redirect('/tasks')
 
+@app.route('/tasks/home')
+def tasks_home():
+    return render_template('tasks_home.html')
+
+
 
 @app.route('/tasks/toggle', methods=['POST'])
 def toggle_task():
