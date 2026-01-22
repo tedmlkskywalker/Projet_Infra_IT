@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-# ✅ IMPORTANT : chemin absolu vers database.db (évite les bugs Alwaysdata)
+# ✅ Chemin absolu vers la base SQLite (Alwaysdata safe)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
@@ -20,7 +20,7 @@ def est_authentifie():
 
 
 # ----------------------------
-# Authentification USER (Basic Auth) - user/12345
+# Authentification USER (Basic Auth)
 # ----------------------------
 def require_user_auth(f):
     @wraps(f)
@@ -37,7 +37,7 @@ def require_user_auth(f):
 
 
 # ----------------------------
-# Routes existantes (base)
+# Routes de base
 # ----------------------------
 @app.route('/')
 def hello_world():
@@ -64,10 +64,9 @@ def authentification():
 
 
 # ---------------------------------------------------
-# Séquence 6 - Bibliothèque (HTML + routes API)
+# Séquence 6 - Bibliothèque
 # ---------------------------------------------------
 
-# ✅ Page admin HTML (ajout/suppression)
 @app.route('/admin/books', methods=['GET'])
 def admin_books():
     if not est_authentifie():
@@ -75,7 +74,6 @@ def admin_books():
     return render_template('books_admin.html')
 
 
-# ✅ Liste HTML des livres
 @app.route('/books', methods=['GET'])
 def books():
     conn = sqlite3.connect(DB_PATH)
@@ -86,7 +84,6 @@ def books():
     return render_template('books_list.html', books=books)
 
 
-# ✅ Livres disponibles (JSON)
 @app.route('/books/available', methods=['GET'])
 def books_available():
     conn = sqlite3.connect(DB_PATH)
@@ -97,7 +94,6 @@ def books_available():
     return jsonify(data)
 
 
-# ✅ Ajouter un livre (ADMIN) — utilisé par books_admin.html
 @app.route('/books/add', methods=['POST'])
 def add_book():
     if not est_authentifie():
@@ -122,7 +118,6 @@ def add_book():
     return redirect('/admin/books')
 
 
-# ✅ Supprimer un livre (ADMIN) — utilisé par books_admin.html
 @app.route('/books/delete', methods=['POST'])
 def delete_book():
     if not est_authentifie():
@@ -141,7 +136,6 @@ def delete_book():
     return redirect('/admin/books')
 
 
-# ✅ Emprunter un livre (USER) — API POST
 @app.route('/loan/<int:book_id>', methods=['POST'])
 @require_user_auth
 def loan_book(book_id):
@@ -155,8 +149,7 @@ def loan_book(book_id):
         conn.close()
         return "Livre introuvable", 404
 
-    stock = row[0]
-    if stock <= 0:
+    if row[0] <= 0:
         conn.close()
         return "Livre indisponible", 400
 
@@ -168,7 +161,6 @@ def loan_book(book_id):
     return "Livre emprunté"
 
 
-# ✅ Retourner un livre (USER) — API POST
 @app.route('/return/<int:book_id>', methods=['POST'])
 @require_user_auth
 def return_book(book_id):
@@ -187,7 +179,6 @@ def return_book(book_id):
     return "Livre retourné"
 
 
-# ✅ Routes de test GET (pour cliquer depuis books_list.html)
 @app.route('/loan_test/<int:book_id>', methods=['GET'])
 @require_user_auth
 def loan_test(book_id):
@@ -198,6 +189,78 @@ def loan_test(book_id):
 @require_user_auth
 def return_test(book_id):
     return return_book(book_id)
+
+
+# ---------------------------------------------------
+# Séquence 7 - Gestion des tâches (AJOUT)
+# ---------------------------------------------------
+
+@app.route('/tasks', methods=['GET'])
+def tasks():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, title, description, due_date, done FROM tasks ORDER BY id DESC')
+    tasks = cursor.fetchall()
+    conn.close()
+    return render_template('tasks_list.html', tasks=tasks)
+
+
+@app.route('/tasks/add', methods=['GET', 'POST'])
+def add_task():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        due_date = request.form.get('due_date', '').strip()
+
+        if not title or not description or not due_date:
+            return render_template('tasks_add.html', error="Tous les champs sont obligatoires.")
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO tasks (title, description, due_date, done) VALUES (?, ?, ?, 0)',
+            (title, description, due_date)
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect('/tasks')
+
+    return render_template('tasks_add.html', error=None)
+
+
+@app.route('/tasks/delete', methods=['POST'])
+def delete_task():
+    task_id = request.form.get('task_id')
+    if not task_id:
+        return "task_id manquant", 400
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/tasks')
+
+
+@app.route('/tasks/toggle', methods=['POST'])
+def toggle_task():
+    task_id = request.form.get('task_id')
+    if not task_id:
+        return "task_id manquant", 400
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        'UPDATE tasks SET done = CASE WHEN done = 0 THEN 1 ELSE 0 END WHERE id = ?',
+        (task_id,)
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect('/tasks')
 
 
 if __name__ == "__main__":
