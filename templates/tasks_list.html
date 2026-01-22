@@ -3,24 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <title>Liste des tâches</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
+<header>
   <h1>📋 Liste des tâches</h1>
+</header>
 
-  <p>
-    <a href="/tasks/home">🏠 Retour à l’accueil des tâches</a>
+<div class="container">
 
+  <nav>
+    <a href="/tasks/home">🏠 Accueil des tâches</a>
     <a href="/tasks/add">➕ Ajouter une tâche</a>
-  </p>
+  </nav>
 
   <hr>
 
   {% if tasks|length == 0 %}
     <p><strong>⏳ En attente de tâches…</strong></p>
-    <p>Tu peux commencer en cliquant ici : <a href="/tasks/add">Ajouter une tâche</a></p>
+    <p><a class="button" href="/tasks/add">Ajouter une tâche</a></p>
   {% else %}
     {% for task in tasks %}
-      <div>
+      <div class="task-card {{ 'done' if task['done'] else 'pending' }}">
         <h3>
           {{ "✅" if task["done"] else "⏳" }}
           {{ task["title"] }}
@@ -29,24 +34,28 @@
         <p>{{ task["description"] }}</p>
         <p><strong>Échéance :</strong> {{ task["due_date"] }}</p>
 
-        <!-- Changer statut -->
         <form method="post" action="/tasks/toggle" style="display:inline;">
           <input type="hidden" name="task_id" value="{{ task['id'] }}">
-          <button type="submit">
+          <button class="button success" type="submit">
             {{ "Marquer en cours" if task["done"] else "Marquer terminée" }}
           </button>
         </form>
 
-        <!-- Supprimer -->
         <form method="post" action="/tasks/delete" style="display:inline;">
           <input type="hidden" name="task_id" value="{{ task['id'] }}">
-          <button type="submit" onclick="return confirm('Supprimer cette tâche ?')">
-            🗑 Supprimer
+          <button class="button danger" type="submit">
+            Supprimer
           </button>
         </form>
       </div>
-      <hr>
     {% endfor %}
   {% endif %}
+
+</div>
+
+<footer>
+  Gestion des tâches – Séquence 7
+</footer>
+
 </body>
 </html>
