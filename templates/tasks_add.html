@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>Ajouter une tâche</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
+<header>
   <h1>➕ Ajouter une tâche</h1>
+</header>
 
-  <p>
-  <a href="/tasks/home">🏠 Retour à l’accueil des tâches</a>
+<div class="container">
 
-    <a href="/tasks">📋 Voir la liste des tâches</a>
-  </p>
+  <nav>
+    <a href="/tasks/home">🏠 Accueil des tâches</a>
+    <a href="/tasks">📋 Liste des tâches</a>
+  </nav>
 
   <hr>
 
@@ -22,12 +27,12 @@
   <form method="post" action="/tasks/add">
     <p>
       <label>Titre</label><br>
-      <input type="text" name="title" required>
+      <input type="text" name="title" required style="width:100%; padding:8px;">
     </p>
 
     <p>
       <label>Description</label><br>
-      <textarea name="description" required></textarea>
+      <textarea name="description" required style="width:100%; padding:8px;"></textarea>
     </p>
 
     <p>
@@ -35,7 +40,14 @@
       <input type="date" name="due_date" required>
     </p>
 
-    <button type="submit">✅ Ajouter</button>
+    <button class="button success" type="submit">Ajouter</button>
   </form>
+
+</div>
+
+<footer>
+  Gestion des tâches – Séquence 7
+</footer>
+
 </body>
 </html>
