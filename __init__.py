@@ -12,6 +12,25 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 
+# ---------------------------------------------------
+# ✅ Séquence 7 - Safety : créer la table tasks si absente
+# (évite le Internal Server Error si la DB sur Alwaysdata n'est pas à jour)
+# ---------------------------------------------------
+def ensure_tasks_table():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            due_date TEXT NOT NULL,
+            done INTEGER NOT NULL DEFAULT 0
+        );
+    """)
+    conn.commit()
+    conn.close()
+
+
 # ----------------------------
 # Authentification ADMIN (session)
 # ----------------------------
@@ -192,11 +211,12 @@ def return_test(book_id):
 
 
 # ---------------------------------------------------
-# Séquence 7 - Gestion des tâches (AJOUT)
+# Séquence 7 - Gestion des tâches
 # ---------------------------------------------------
 
 @app.route('/tasks', methods=['GET'])
 def tasks():
+    ensure_tasks_table()
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -208,6 +228,8 @@ def tasks():
 
 @app.route('/tasks/add', methods=['GET', 'POST'])
 def add_task():
+    ensure_tasks_table()
+
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
@@ -232,6 +254,8 @@ def add_task():
 
 @app.route('/tasks/delete', methods=['POST'])
 def delete_task():
+    ensure_tasks_table()
+
     task_id = request.form.get('task_id')
     if not task_id:
         return "task_id manquant", 400
@@ -247,6 +271,8 @@ def delete_task():
 
 @app.route('/tasks/toggle', methods=['POST'])
 def toggle_task():
+    ensure_tasks_table()
+
     task_id = request.form.get('task_id')
     if not task_id:
         return "task_id manquant", 400
