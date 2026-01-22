@@ -2,23 +2,33 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Accueil – Gestion des tâches</title>
+  <title>Gestion des tâches</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
+<header>
   <h1>✅ Gestion des tâches</h1>
+  <p>Organisez et suivez vos tâches simplement</p>
+</header>
 
-  <p>Que voulez-vous faire ?</p>
-
-  <ul>
-    <li><a href="/tasks/add">➕ Ajouter une tâche</a></li>
-    <li><a href="/tasks">📋 Consulter la liste des tâches</a></li>
-  </ul>
-
-  <hr>
+<div class="container">
+  <h2>Que souhaitez-vous faire ?</h2>
 
   <p>
-    <a href="/">🏠 Retour à l’accueil principal</a> |
-    <a href="/books">📚 Bibliothèque</a>
+    <a class="button success" href="/tasks/add">➕ Ajouter une tâche</a>
+    <a class="button" href="/tasks">📋 Voir la liste des tâches</a>
   </p>
+
+  <nav>
+    <a href="/">🏠 Accueil général</a>
+    <a href="/books">📚 Bibliothèque</a>
+  </nav>
+</div>
+
+<footer>
+  Projet Architecture IT – Séquence 7
+</footer>
+
 </body>
 </html>
